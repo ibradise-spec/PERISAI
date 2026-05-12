@@ -1,0 +1,20 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import MainLayout from './components/layout/MainLayout'
+import AIChatPage from './pages/AIChatPage'
+import HabitLogPage from './pages/HabitLogPage'
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Navigate to="/chat" replace />} />
+        <Route path="chat" element={<AIChatPage />} />
+        <Route path="habit-log" element={<HabitLogPage />} />
+        {/* <Route path="risk-profile" element={<RiskProfilePage />} /> */}
+        {/* <Route path="medical-records" element={<MedicalRecordsPage />} /> */}
+      </Route>
+    </Routes>
+  )
+}
+
+export default App
