@@ -1,10 +1,18 @@
 import { useState } from 'react'
 import { IoAddOutline } from 'react-icons/io5'
 import { LuSendHorizontal } from 'react-icons/lu'
+import { useAuth } from '../context/useAuth'
 import DailyCheckInModal from '../components/ui/DailyCheckInModal'
 
 function AIChatPage() {
     const [message, setMessage] = useState('')
+    const { isLoggedIn } = useAuth()
+    const [checkedIn, setCheckedIn] = useState(() => {
+        const today = new Date().toDateString()
+        return localStorage.getItem('lastCheckin') === today
+    })
+
+    const showModal = isLoggedIn && !checkedIn
 
     const handleSend = () => {
         if (!message.trim()) return
@@ -12,16 +20,11 @@ function AIChatPage() {
         setMessage('')
     }
 
-    const [showModal, setShowModal] = useState(() => {
-        const today = new Date().toDateString()
-        const lastCheckin = localStorage.getItem('lastCheckin')
-        return lastCheckin !== today
-    })
-
     const handleSubmit = (data) => {
         const today = new Date().toDateString()
         localStorage.setItem('lastCheckin', today)
         localStorage.setItem('checkinData', JSON.stringify(data))
+        setCheckedIn(true)
     }
 
     return (
@@ -29,7 +32,7 @@ function AIChatPage() {
 
             {showModal && (
                 <DailyCheckInModal
-                    onClose={() => setShowModal(false)}
+                    onClose={() => setCheckedIn(true)}
                     onSubmit={handleSubmit}
                 />
             )}

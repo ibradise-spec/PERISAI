@@ -5,13 +5,11 @@ import Sidebar from './Sidebar'
 
 function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const isLoggedIn = false // nanti diganti pakai context auth
 
   return (
     <div className="min-h-screen bg-[#E5E7EB]">
       <Navbar
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        isLoggedIn={isLoggedIn}
       />
       <Sidebar isOpen={sidebarOpen} />
       <main className={`pt-16 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>

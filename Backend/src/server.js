@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const errorHandler = require('./middleware/errorHandler');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const host = process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0';
@@ -15,6 +16,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ success: true, message: 'PERISAI API is running' });
 });
+
+app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 

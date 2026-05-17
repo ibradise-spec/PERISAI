@@ -1,11 +1,18 @@
 import { RxHamburgerMenu } from 'react-icons/rx'
 import { IoPersonCircleOutline, IoSettingsOutline } from 'react-icons/io5'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/useAuth'
 import logo from '../../assets/LogoPerisai.png'
 
-function Navbar({ onToggleSidebar, isLoggedIn }) {
+function Navbar({ onToggleSidebar }) {
+  const { isLoggedIn, logout, user } = useAuth()
   const navigate = useNavigate()
 
+  const handleLogout = () => {
+    logout()
+    navigate('/chat')
+  }
+  
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
@@ -21,6 +28,13 @@ function Navbar({ onToggleSidebar, isLoggedIn }) {
       <div className="flex items-center gap-3">
         {isLoggedIn ? (
           <>
+            <span className="text-sm text-[#64748B]">Hi, {user?.name}</span>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-[#64748B] hover:text-[#0F172A] font-medium px-4 py-2 hover:underline"
+            >
+              Logout
+            </button>
             <IoPersonCircleOutline size={28} className="text-[#0F172A] cursor-pointer" />
             <IoSettingsOutline size={24} className="text-[#0F172A] cursor-pointer" />
           </>
