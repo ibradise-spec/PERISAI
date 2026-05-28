@@ -41,10 +41,10 @@ function Navbar({ onToggleSidebar }) {
         ) : (
           <>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/register')}
               className="text-[#3B82F6] font-medium px-4 py-2 hover:underline"
             >
-              Sign In
+              Sign Up
             </button>
             <button
               onClick={() => navigate('/login')}

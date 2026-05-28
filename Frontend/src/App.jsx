@@ -4,7 +4,7 @@ import AIChatPage from './pages/AIChatPage'
 import HabitLogPage from './pages/HabitLogPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
-
+// import RiskProfilePage from './pages/RiskProfilePage'
 
 function App() {
   return (
