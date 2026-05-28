@@ -18,6 +18,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/habit-log', require('./routes/habitLog'));
 
 app.use(errorHandler);
 

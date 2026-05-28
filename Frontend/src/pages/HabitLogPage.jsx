@@ -1,37 +1,61 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { s } from '../styles/common'
 import { BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts'
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5'
-
-const sleepData = [
-    { day: 'Mon', hours: 5 },
-    { day: 'Tue', hours: 6 },
-    { day: 'Wed', hours: 6.5 },
-    { day: 'Thu', hours: 7 },
-    { day: 'Fri', hours: 7.5 },
-]
+import api from '../services/api'
+import { useAuth } from '../context/useAuth'
 
 function HabitLogPage() {
-    const [meals, setMeals] = useState(3)
-    const [selectedFoods, setSelectedFoods] = useState(['Fresh Vegetables'])
-    const [exercised, setExercised] = useState(true)
-    const [intensity, setIntensity] = useState('Medium')
-    const [steps] = useState(8342)
-    const [sleepHours] = useState(7.5)
-    const [stressLevel, setStressLevel] = useState(null)
+    const { isLoggedIn } = useAuth()
+    const [logData, setLogData] = useState(null)
+    const [loading, setLoading] = useState(true)
     const [currentDate, setCurrentDate] = useState(new Date())
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            Promise.resolve().then(() => setLoading(false))
+            return
+        }
+        const dateStr = currentDate.toISOString().split('T')[0]
+        api.get(`/api/habit-log?date=${dateStr}`)
+            .then(res => {
+                setLogData(res.data.data)
+                setLoading(false)
+            })
+            .catch(() => setLoading(false))
+    }, [isLoggedIn, currentDate])
+
+    const meals = logData?.meals ?? '-'
+    const selectedFoods = logData?.food_types ?? []
+    const exercised = logData?.exercised ?? false
+    const intensity = logData?.exercise_intensity ?? '-'
+    const steps = logData?.daily_steps ?? 0
+    const sleepHours = logData?.sleep_hours ?? 0
+    const stressLevel = logData?.stress_level ?? null
+
 
     const foodOptions = ['Fresh Vegetables', 'Lean Protein', 'Sugary Snacks', 'Fast Food', 'Whole Grain']
     const intensityOptions = ['Low', 'Medium', 'High']
     const isToday = new Date().toDateString() === currentDate.toDateString()
 
-    const toggleFood = (food) => {
-        setSelectedFoods(prev =>
-            prev.includes(food) ? prev.filter(f => f !== food) : [...prev, food]
-        )
-    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const minDate = new Date(today)
+    minDate.setDate(minDate.getDate() - 6)
+
+    const isMinDate = currentDate <= minDate
+
+    const sleepData = [
+        { day: 'Mon', hours: sleepHours },
+        { day: 'Tue', hours: sleepHours },
+        { day: 'Wed', hours: sleepHours },
+        { day: 'Thu', hours: sleepHours },
+        { day: 'Fri', hours: sleepHours },
+    ]
 
     const goToPrev = () => {
+        if (isMinDate) return
         const prev = new Date(currentDate)
         prev.setDate(prev.getDate() - 1)
         setCurrentDate(prev)
@@ -53,6 +77,8 @@ function HabitLogPage() {
         })
     }
 
+    if (loading) return <div className="p-6 text-[#64748B]">Loading...</div>
+
     return (
         <div className={s.pageWrapper}>
             <h1 className={s.pageTitle}>Hi, Ibra!</h1>
@@ -62,6 +88,7 @@ function HabitLogPage() {
             <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 px-4 py-3 mt-4 mb-2 max-w-sm">
                 <button
                     onClick={goToPrev}
+                    disabled={isMinDate}
                     className="text-[#64748B] hover:text-[#0F172A] transition-colors"
                 >
                     <IoChevronBackOutline size={20} />
@@ -79,7 +106,13 @@ function HabitLogPage() {
                     <IoChevronForwardOutline size={20} />
                 </button>
             </div>
-            
+
+            {!logData && (
+                <div className="mt-4 mb-2 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+                    Belum ada data untuk hari ini. Isi check-in harian kamu dulu ya!
+                </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 mt-6">
 
                 {/* Daily Nutrition */}
@@ -91,35 +124,22 @@ function HabitLogPage() {
 
                     <p className="text-sm text-[#64748B] mb-3">How many meals do you have today?</p>
                     <div className="flex items-center gap-4 bg-gray-100 rounded-full px-4 py-2 w-fit mb-4">
-                        <button
-                            onClick={() => setMeals(m => Math.max(1, m - 1))}
-                            className="text-[#64748B] hover:text-[#0F172A] font-bold text-lg w-6"
-                        >
-                            -
-                        </button>
                         <span className="font-semibold text-[#0F172A] w-4 text-center">{meals}</span>
-                        <button
-                            onClick={() => setMeals(m => m + 1)}
-                            className="text-[#64748B] hover:text-[#0F172A] font-bold text-lg w-6"
-                        >
-                            +
-                        </button>
                     </div>
 
                     <p className="text-sm text-[#64748B] mb-3">What kinda food did you eat?</p>
                     <div className="flex flex-wrap gap-2">
                         {foodOptions.map(food => (
-                            <button
+                            <span
                                 key={food}
-                                onClick={() => toggleFood(food)}
-                                className={`text-sm px-4 py-1.5 rounded-full border transition-colors
-                  ${selectedFoods.includes(food)
+                                className={`text-sm px-4 py-1.5 rounded-full border
+                                    ${selectedFoods.includes(food)
                                         ? 'bg-[#3B82F6] text-white border-[#3B82F6]'
-                                        : 'bg-white text-[#0F172A] border-gray-300 hover:border-[#3B82F6]'
+                                        : 'bg-white text-[#0F172A] border-gray-300'
                                     }`}
                             >
                                 {food}
-                            </button>
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -133,37 +153,28 @@ function HabitLogPage() {
 
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-sm text-[#0F172A]">Did you exercise?</span>
-                        <div className="flex gap-2">
-                            {['Yes', 'No'].map(opt => (
-                                <button
-                                    key={opt}
-                                    onClick={() => setExercised(opt === 'Yes')}
-                                    className={`text-sm px-4 py-1 rounded-full border transition-colors
-                    ${(opt === 'Yes' && exercised) || (opt === 'No' && !exercised)
-                                            ? 'bg-[#3B82F6] text-white border-[#3B82F6]'
-                                            : 'bg-white text-[#0F172A] border-gray-300'
-                                        }`}
-                                >
-                                    {opt}
-                                </button>
-                            ))}
-                        </div>
+                        <span className={`text-sm px-4 py-1 rounded-full border
+                            ${exercised
+                                ? 'bg-[#3B82F6] text-white border-[#3B82F6]'
+                                : 'bg-white text-[#0F172A] border-gray-300'
+                            }`}>
+                            {exercised ? 'Yes' : 'No'}
+                        </span>
                     </div>
 
                     <p className="text-sm text-[#0F172A] mb-2">Intensity</p>
                     <div className="flex gap-2 mb-4">
                         {intensityOptions.map(opt => (
-                            <button
+                            <span
                                 key={opt}
-                                onClick={() => setIntensity(opt)}
-                                className={`flex-1 text-sm py-1.5 rounded-full border transition-colors
-                  ${intensity === opt
+                                className={`flex-1 text-sm py-1.5 rounded-full border text-center
+                                    ${intensity === opt
                                         ? 'bg-[#3B82F6] text-white border-[#3B82F6]'
-                                        : 'bg-white text-[#0F172A] border-gray-300 hover:border-[#3B82F6]'
+                                        : 'bg-white text-[#0F172A] border-gray-300'
                                     }`}
                             >
                                 {opt}
-                            </button>
+                            </span>
                         ))}
                     </div>
 
@@ -212,17 +223,16 @@ function HabitLogPage() {
 
                     <div className="flex justify-between gap-2 mb-2">
                         {[1, 2, 3, 4, 5].map(level => (
-                            <button
+                            <div
                                 key={level}
-                                onClick={() => setStressLevel(level)}
-                                className={`w-12 h-12 rounded-full border-2 font-semibold text-sm transition-colors
-                  ${stressLevel === level
+                                className={`w-12 h-12 rounded-full border-2 font-semibold text-sm flex items-center justify-center
+                                    ${stressLevel === level
                                         ? 'bg-[#3B82F6] text-white border-[#3B82F6]'
-                                        : 'bg-gray-100 text-[#0F172A] border-transparent hover:border-[#3B82F6]'
+                                        : 'bg-gray-100 text-[#0F172A] border-transparent'
                                     }`}
                             >
                                 {level}
-                            </button>
+                            </div>
                         ))}
                     </div>
                     <div className="flex justify-between text-xs text-[#64748B] px-1">

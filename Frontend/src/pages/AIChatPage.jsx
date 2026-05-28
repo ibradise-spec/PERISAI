@@ -3,6 +3,7 @@ import { IoAddOutline } from 'react-icons/io5'
 import { LuSendHorizontal } from 'react-icons/lu'
 import { useAuth } from '../context/useAuth'
 import DailyCheckInModal from '../components/ui/DailyCheckInModal'
+import api from '../services/api'
 
 function AIChatPage() {
     const [message, setMessage] = useState('')
@@ -20,11 +21,21 @@ function AIChatPage() {
         setMessage('')
     }
 
-    const handleSubmit = (data) => {
-        const today = new Date().toDateString()
-        localStorage.setItem('lastCheckin', today)
-        localStorage.setItem('checkinData', JSON.stringify(data))
-        setCheckedIn(true)
+    const handleSubmit = async (data) => {
+        try {
+            await api.post('/api/habit-log', data)
+            const today = new Date().toDateString()
+            localStorage.setItem('lastCheckin', today)
+            localStorage.setItem('checkinData', JSON.stringify(data))
+            setCheckedIn(true)
+        } catch (err) {
+            console.error('Gagal simpan habit log:', err)
+            // tetap simpan ke localStorage sebagai fallback
+            const today = new Date().toDateString()
+            localStorage.setItem('lastCheckin', today)
+            localStorage.setItem('checkinData', JSON.stringify(data))
+            setCheckedIn(true)
+        }
     }
 
     return (
